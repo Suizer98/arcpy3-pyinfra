@@ -1,0 +1,12 @@
+services:
+  ansible-downloader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ansible-packages-downloader
+    volumes:
+      # Mount to map the ansible_packages directory from container to host
+      - ./ansible_packages:/app/ansible_packages
+    environment:
+      - PYTHONUNBUFFERED=1
+    # Run the download script (default CMD from Dockerfile)
