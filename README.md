@@ -1,125 +1,94 @@
-# ArcPy3 Ansible
+# ArcPy3 PyInfra
 
-This project provides a Docker-based solution for downloading Python packages (specifically Ansible and its dependencies) that are compatible with ArcGIS Pro 3.5's Python 3.11.11 environment on Windows.
-
-![Tech Stacks](https://skillicons.dev/icons?i=ansible,docker,python,windows)
+![Tech Stacks](https://skillicons.dev/icons?i=python,docker,windows,git)
 
 ## Overview
 
-ArcGIS Pro 3.5 comes with a specific Python 3.11.11 environment that may have limited internet access or package installation restrictions in enterprise environments. This tool allows you to:
+In production environment, we may have encountered where we need to install ArcGIS Pro 3.1.2 with Python 3.9.16 environment in a hardened vm. However, that vm may have limited internet access or package installation restrictions in enterprise environments. This tool allows you to:
 
-1. Download all required Ansible packages for Windows Python 3.11.11 using Docker
+1. Download all required PyInfra packages for Windows Python 3.9.16 using Docker
 2. Transfer the downloaded packages to your ArcGIS Pro VM
 3. Install them offline in a virtual environment
+4. Run automated environment checks with a user-friendly TUI (Text User Interface)
 
-## Architecture
+## Quick Start
 
-```
-Host Machine (with Docker)     →     VM (ArcGIS Pro 3.5 - No Docker needed)
-┌─────────────────────────┐           ┌──────────────────────────────┐
-│ docker compose up       │   copy    │ Python 3.11.11 venv         │
-│ Downloads .whl packages │    →      │ pip install --find-links .  │
-│ to ./ansible_packages/  │           │ ansible-navigator run        │
-└─────────────────────────┘           └──────────────────────────────┘
-```
-
-**Key Point**: Docker is only used for downloading packages. Your VM doesn't need Docker installed.
-
-## Download Packages
-
-Run the project to download packages:
+### Download Packages
 
 ```bash
-cd arcpy3-ansible
-docker compose up
-```
+cd arcpy3-pyinfra
+docker compose up --build
 OR
-```bash
-podman compose up
+podman compose up --build
 ```
 
-The packages will be downloaded to the `./ansible_packages` directory and automatically listed.
+The packages will be downloaded to the `./pyinfra_packages` directory.
 
-## VM Setup (Windows with ArcGIS Pro)
+### Install on Windows VM
 
-### 1. Prepare Virtual Environment
+#### 1. Prepare Virtual Environment
 
-Navigate to your ArcGIS Pro Python environment and create a new virtual environment:
+Navigate to your ArcGIS Pro Python environment and create a new virtual environment (using Program Files as example):
 
 ```cmd
-C:\Users\macminiowner\AppData\Local\Programs\ArcGIS\Pro\bin\Python\envs\arcgispro-py3>python -m venv C:\venvs\ansible-env
+C:\Program Files\ArcGIS\Pro\bin\Python\envs\arcgispro-py3>python -m venv pyinfra-venv C:\venvs\pyinfra-venv
 ```
 
-### 2. Activate the Virtual Environment
+#### 2. Activate the Virtual Environment
 
 ```cmd
-C:\Users\macminiowner\AppData\Local\Programs\ArcGIS\Pro\bin\Python\envs\arcgispro-py3>C:\venvs\ansible-env\Scripts\activate
+C:\Program Files\ArcGIS\Pro\bin\Python\envs\arcgispro-py3>C:\venvs\pyinfra-venv\Scripts\activate
 
-(ansible-env) C:\Users\macminiowner\AppData\Local\Programs\ArcGIS\Pro\bin\Python\envs\arcgispro-py3>
+(pyinfra-venv) C:\Program Files\ArcGIS\Pro\bin\Python\envs\arcgispro-py3>
 ```
 
-### 3. Transfer Downloaded Packages
+#### 3. Transfer Downloaded Packages
 
-Copy the `ansible_packages` folder from your Docker host to your Windows VM. You can use:
-- Network share
-- USB drive
-- SCP/SFTP
-- Any file transfer method available in your environment
+Copy the `pyinfra_packages` folder from your Docker host to your Windows VM. You can use any file transfer method available in your environment.
 
-### 4. Install Packages Offline
+#### 4. Install Packages Offline
 
 Once you have the packages on your VM and your virtual environment activated:
 
 ```cmd
-(ansible-env) C:\> cd path\to\ansible_packages
+(pyinfra-venv) C:\> cd path\to\pyinfra_packages
 
-(ansible-env) C:\path\to\ansible_packages> pip install --find-links . --no-index ansible
+(pyinfra-venv) C:\path\to\pyinfra_packages> pip install --find-links . --no-index pyinfra
 ```
 
-This will install Ansible and all its dependencies from the local package directory without requiring internet access.
-
-## Verify Installation
-
-Test that Ansible and Ansible Navigator are properly installed:
+### Verify Installation
 
 ```cmd
-(ansible-env) C:\> ansible --version
-(ansible-env) C:\> ansible-navigator --version
-(ansible-env) C:\> python -c "import ansible; print('Ansible successfully installed')"
+pyinfra --version
 ```
 
-## Using with Ansible Navigator
+## Running Environment Checks
 
-Once installed, you can use Ansible Navigator for a modern TUI experience:
+After installing pyinfra, you can run environment checks to verify your setup:
 
-```cmd
-(ansible-env) C:\> ansible-navigator run playbook.yml
-(ansible-env) C:\> ansible-navigator inventory --host all
-(ansible-env) C:\> ansible-navigator collections
+```bash
+pyinfra @local env_checks.py
 ```
 
-**Note**: Docker is only used on your host machine to download packages. The VM doesn't need Docker - it just uses the offline-installed Python packages.
+This will check:
+- ArcGIS Pro installation in common locations
+- pyinfra-venv virtual environment existence
+- Virtual environment activation readiness
 
-## Package Contents
+## Why PyInfra?
 
-The downloaded packages include:
-- **ansible** - Main Ansible package  
-- **ansible-core** - Core Ansible functionality
-- **ansible-navigator** - Text-based user interface for Ansible
-- **paramiko** - SSH client library
-- **PyYAML** - YAML parser
-- **Jinja2** - Template engine
-- **cryptography** - Cryptographic library
-- **packaging** - Core utilities for Python packages
-- **requests** - HTTP library
-- And all their dependencies
+- **Better Windows Compatibility**: Unlike Ansible or Salt cannot be hosted on Window machine
+- **Simpler Dependencies**: Fewer system-level dependencies
+- **ArcGIS Pro Friendly**: Better integration with Python-based GIS workflows
 
-## Features
+## Version Compatibility
 
-- **Platform-specific**: Packages downloaded specifically for Windows x64 platform
-- **Version-matched**: Compatible with ArcGIS Pro 3.5's Python 3.11.11
-- **Offline installation**: No internet required on target VM
-- **Complete dependency set**: All required dependencies included
-- **Docker-based**: Clean, reproducible download environment
+### ArcGIS Pro 3.1.2
+**Important**: If you're using ArcGIS Pro 3.1.2, you must use **pyinfra < 3.0** due to compatibility issues with the Python environment in that version.
 
-## Troubleshooting
+```bash
+pip install "pyinfra<3.0"
+```
+
+### ArcGIS Pro 3.5
+For ArcGIS Pro 3.5 and later versions, you can use the latest pyinfra version (3.x) as they have improved Python 3.11.11 support.

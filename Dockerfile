@@ -5,19 +5,19 @@ WORKDIR /app
 # Update pip to latest version
 RUN pip install --upgrade pip
 
-# Create a script to download packages at runtime so they persist to mounted volume
+# Create pyinfra_packages directory
+RUN mkdir -p /app/pyinfra_packages
+
+# Create a script to download packages when container runs
 RUN echo '#!/bin/bash\n\
-echo "Downloading Ansible packages for Windows..."\n\
-pip download \\\n\
-    --platform win_amd64 \\\n\
-    --python-version 3.11 \\\n\
-    --only-binary=:all: \\\n\
-    --dest /app/ansible_packages \\\n\
-    --verbose \\\n\
-    ansible ansible-navigator\n\
-echo "Download complete! Packages saved to /app/ansible_packages/"\n\
-ls -la /app/ansible_packages/\n\
-' > /app/download_packages.sh && chmod +x /app/download_packages.sh
+echo "Downloading PyInfra <3.0 for Windows (ArcGIS Pro 3.1.2 compatibility)..."\n\
+pip download --dest /app/pyinfra_packages --platform win_amd64 --python-version 3.9.16 --only-binary=:all: "pyinfra<3"\n\
+echo "Downloading additional Windows dependencies..."\n\
+pip download --dest /app/pyinfra_packages --platform win_amd64 --python-version 3.9.16 --only-binary=:all: colorama sspilib\n\
+echo "Download complete! Packages saved to /app/pyinfra_packages/"\n\
+ls -la /app/pyinfra_packages/\n\
+echo "Container will exit."\n\
+' > /app/download.sh && chmod +x /app/download.sh
 
 # Run the download script
-CMD ["/app/download_packages.sh"]
+CMD ["/app/download.sh"]

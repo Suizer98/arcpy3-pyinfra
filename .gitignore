@@ -1,5 +1,5 @@
 # Downloaded packages - these are large binary files
-ansible_packages/
+pyinfra_packages/
 
 # Python
 __pycache__/

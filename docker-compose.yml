@@ -1,12 +1,12 @@
 services:
-  ansible-downloader:
+  pyinfra-downloader:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ansible-packages-downloader
+    container_name: arcpy3-pyinfra-downloader
     volumes:
-      # Mount to map the ansible_packages directory from container to host
-      - ./ansible_packages:/app/ansible_packages
+      # Mount to map the pyinfra_packages directory from container to host
+      - ./pyinfra_packages:/app/pyinfra_packages
     environment:
       - PYTHONUNBUFFERED=1
     # Run the download script (default CMD from Dockerfile)
